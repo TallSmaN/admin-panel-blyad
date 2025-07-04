@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { buildImageUrl } from "@/config/api-endpoints"
 import { Plus, Edit, Trash2, Users, ImageIcon } from "lucide-react"
 import { ProductsPageCourier } from "./products-page-courier"
 
@@ -180,7 +181,11 @@ export function ProductsPage({ user }: ProductsPageProps) {
         render: (imageUrl: string | undefined) => (
           <div className="w-12 h-12 bg-muted rounded-md overflow-hidden border flex items-center justify-center">
             {imageUrl ? (
-              <img src={imageUrl || "/placeholder.svg"} alt="Товар" className="w-full h-full object-cover" />
+              <img
+                src={buildImageUrl(imageUrl) || "/placeholder.svg"}
+                alt="Товар"
+                className="w-full h-full object-cover"
+              />
             ) : (
               <ImageIcon className="h-4 w-4 text-muted-foreground" />
             )}

@@ -8,12 +8,16 @@ class ImageService {
 
   async uploadImage(file: File): Promise<ImageUploadResponse> {
     if (this.USE_API) {
-      const response = await apiClient.uploadFile<{ imageUrl: string }>(API_CONFIG.ENDPOINTS.IMAGES.UPLOAD, file)
+      // Реальная загрузка на бэкенд
+      const response = await apiClient.uploadFile<{ filename: string; url: string }>(
+        API_CONFIG.ENDPOINTS.IMAGES.UPLOAD,
+        file,
+      )
 
       if (response.success && response.data) {
         return {
           success: true,
-          imageUrl: response.data.imageUrl,
+          imageUrl: response.data.filename, // Сохраняем только имя файла
         }
       } else {
         return {
@@ -42,6 +46,7 @@ class ImageService {
           return
         }
 
+        // В моке возвращаем blob URL для предпросмотра
         const imageUrl = URL.createObjectURL(file)
         resolve({
           success: true,
@@ -53,14 +58,20 @@ class ImageService {
 
   async deleteImage(imageUrl: string): Promise<boolean> {
     if (this.USE_API) {
-      const response = await apiClient.post(API_CONFIG.ENDPOINTS.IMAGES.DELETE, { imageUrl })
+      // Реальное удаление с бэкенда
+      const response = await apiClient.post(API_CONFIG.ENDPOINTS.IMAGES.DELETE, {
+        filename: imageUrl, // Передаем имя файла
+      })
       return response.success
     }
 
     // Мок для разработки
     return new Promise((resolve) => {
       setTimeout(() => {
-        URL.revokeObjectURL(imageUrl)
+        // Очищаем blob URL
+        if (imageUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(imageUrl)
+        }
         resolve(true)
       }, 500)
     })

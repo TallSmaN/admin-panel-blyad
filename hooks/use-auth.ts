@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { dataService } from "@/services/data-service"
 import { api } from "@/lib/api"
+import { JWTManager } from "@/lib/jwt-utils"
 import type { User } from "@/types"
 
 export function useAuth() {
@@ -12,9 +13,20 @@ export function useAuth() {
   useEffect(() => {
     // Проверяем есть ли токен
     if (api.isAuthenticated()) {
-      // В реальном приложении здесь можно декодировать JWT
-      // Пока ставим заглушку
-      setUser({ id: "1", login: "user", password: "", role: "manager" })
+      const claims = JWTManager.getUserFromToken()
+      if (claims) {
+        setUser({
+          id: claims.user_id || "",
+          login: claims.login,
+          password: "",
+          role: claims.isManager !== undefined
+            ? claims.isManager
+              ? "manager"
+              : "courier"
+            : claims.role,
+          cities: claims.cities,
+        })
+      }
     }
     setIsLoading(false)
   }, [])

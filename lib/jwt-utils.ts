@@ -4,6 +4,7 @@ export interface JWTClaims {
   user_id: string
   login: string
   role: "manager" | "courier"
+  isManager?: boolean
   cities?: string[]
   exp: number
   iat: number

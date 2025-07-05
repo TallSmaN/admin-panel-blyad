@@ -3,6 +3,7 @@
 
 import { BACKEND_CONFIG } from "@/config/backend"
 import { api } from "@/lib/api"
+import { JWTManager } from "@/lib/jwt-utils"
 import { MOCK_USERS, MOCK_CATEGORIES, MOCK_SUBCATEGORIES, MOCK_PRODUCTS, MOCK_COURIERS, MOCK_CITIES } from "./mock-data"
 import type { User, Category, Subcategory, Product, Courier } from "@/types"
 
@@ -12,9 +13,22 @@ class DataService {
     if (BACKEND_CONFIG.USE_BACKEND) {
       const response = await api.login(login, password)
       if (response.success) {
-        // Здесь можно декодировать JWT и получить данные пользователя
-        // Пока возвращаем базовые данные
-        return { id: "1", login, password: "", role: "manager" }
+        // Декодируем JWT, чтобы получить данные пользователя
+        const claims = JWTManager.decodeToken()
+        if (claims) {
+          return {
+            id: claims.user_id || "",
+            login: claims.login || login,
+            password: "",
+            role: claims.isManager !== undefined
+              ? claims.isManager
+                ? "manager"
+                : "courier"
+              : claims.role,
+            cities: claims.cities,
+          }
+        }
+        return { id: "", login, password: "", role: "manager" }
       }
       return null
     }

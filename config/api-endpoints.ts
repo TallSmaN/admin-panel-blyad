@@ -49,9 +49,8 @@ export const API_CONFIG = {
 
     // Изображения
     IMAGES: {
-      UPLOAD: "/images/upload", // POST - загрузка файла
-      DELETE: "/images/delete", // POST - удаление по URL
-      GET: (filename: string) => `/images/${filename}`, // GET - получение изображения
+      UPLOAD: "/images/upload",
+      DELETE: "/images/delete",
     },
 
     // Справочники
@@ -64,17 +63,4 @@ export const API_CONFIG = {
 // Хелпер для построения полного URL
 export const buildApiUrl = (endpoint: string): string => {
   return `${API_CONFIG.BASE_URL}${endpoint}`
-}
-
-// Хелпер для построения URL изображения
-export const buildImageUrl = (filename: string): string => {
-  if (!filename) return "/placeholder.svg"
-
-  // Если это уже полный URL (например, blob URL в моке)
-  if (filename.startsWith("http") || filename.startsWith("blob:")) {
-    return filename
-  }
-
-  // Строим URL для получения изображения с бэкенда
-  return buildApiUrl(API_CONFIG.ENDPOINTS.IMAGES.GET(filename))
 }

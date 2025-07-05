@@ -1,8 +1,7 @@
-// Универсальный API клиент с поддержкой JWT
+// Универсальный API клиент
 // Фронтендеру не нужно изменять этот файл
 
 import { buildApiUrl } from "@/config/api-endpoints"
-import { JWTManager } from "@/lib/jwt-utils"
 
 export interface ApiResponse<T = any> {
   success: boolean
@@ -13,7 +12,7 @@ export interface ApiResponse<T = any> {
 
 class ApiClient {
   private getAuthHeaders(): HeadersInit {
-    const token = JWTManager.getToken()
+    const token = localStorage.getItem("authToken")
     return {
       "Content-Type": "application/json",
       ...(token && { Authorization: `Bearer ${token}` }),
@@ -22,15 +21,6 @@ class ApiClient {
 
   private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
     try {
-      // Если токен истек, очищаем его
-      if (response.status === 401) {
-        JWTManager.removeToken()
-        // Можно добавить редирект на /login
-        if (typeof window !== "undefined") {
-          window.location.href = "/login"
-        }
-      }
-
       const data = await response.json()
 
       if (!response.ok) {
@@ -58,7 +48,6 @@ class ApiClient {
       const response = await fetch(buildApiUrl(endpoint), {
         method: "GET",
         headers: this.getAuthHeaders(),
-        credentials: "include", // Для отправки cookies
       })
       return this.handleResponse<T>(response)
     } catch (error) {
@@ -74,7 +63,6 @@ class ApiClient {
       const response = await fetch(buildApiUrl(endpoint), {
         method: "POST",
         headers: this.getAuthHeaders(),
-        credentials: "include", // Для отправки cookies
         body: data ? JSON.stringify(data) : undefined,
       })
       return this.handleResponse<T>(response)
@@ -91,7 +79,6 @@ class ApiClient {
       const response = await fetch(buildApiUrl(endpoint), {
         method: "PUT",
         headers: this.getAuthHeaders(),
-        credentials: "include", // Для отправки cookies
         body: data ? JSON.stringify(data) : undefined,
       })
       return this.handleResponse<T>(response)
@@ -108,7 +95,6 @@ class ApiClient {
       const response = await fetch(buildApiUrl(endpoint), {
         method: "DELETE",
         headers: this.getAuthHeaders(),
-        credentials: "include", // Для отправки cookies
       })
       return this.handleResponse<T>(response)
     } catch (error) {
@@ -124,7 +110,7 @@ class ApiClient {
       const formData = new FormData()
       formData.append("file", file)
 
-      const token = JWTManager.getToken()
+      const token = localStorage.getItem("authToken")
       const headers: HeadersInit = {}
       if (token) {
         headers.Authorization = `Bearer ${token}`
@@ -133,7 +119,6 @@ class ApiClient {
       const response = await fetch(buildApiUrl(endpoint), {
         method: "POST",
         headers,
-        credentials: "include", // Для отправки cookies
         body: formData,
       })
       return this.handleResponse<T>(response)

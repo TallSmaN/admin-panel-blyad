@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { LoginForm } from "@/components/auth/login-form"
 import { Sidebar } from "@/components/layout/sidebar"
 import { CategoriesPage } from "@/components/pages/categories-page"
 import { SubcategoriesPage } from "@/components/pages/subcategories-page"
@@ -12,8 +12,15 @@ import { CitiesPage } from "@/components/pages/cities-page"
 import { ThemeProvider } from "@/components/theme-provider"
 
 export default function AdminPanel() {
-  const { user, isAuthenticated, isLoading, login, logout } = useAuth()
+  const { user, isAuthenticated, isLoading, logout } = useAuth()
   const [currentPage, setCurrentPage] = useState("categories")
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login")
+    }
+  }, [isAuthenticated, isLoading, router])
 
   if (isLoading) {
     return (
@@ -28,7 +35,9 @@ export default function AdminPanel() {
   if (!isAuthenticated || !user) {
     return (
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-        <LoginForm onLogin={login} />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-lg">Перенаправление...</div>
+        </div>
       </ThemeProvider>
     )
   }
@@ -61,10 +70,15 @@ export default function AdminPanel() {
     }
   }
 
+  const handleLogout = () => {
+    logout()
+    router.push("/login")
+  }
+
   return (
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <div className="min-h-screen bg-background">
-        <Sidebar user={user} currentPage={getInitialPage()} onPageChange={setCurrentPage} onLogout={logout} />
+        <Sidebar user={user} currentPage={getInitialPage()} onPageChange={setCurrentPage} onLogout={handleLogout} />
         <main className="md:pl-64">
           <div className="p-6 pt-16 md:pt-6">{renderPage()}</div>
         </main>

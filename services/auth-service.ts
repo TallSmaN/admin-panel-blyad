@@ -1,6 +1,7 @@
 import type { User } from "@/types"
 import { apiClient } from "./api-client"
 import { API_CONFIG } from "@/config/api-endpoints"
+import { JWTManager, type JWTClaims } from "@/lib/jwt-utils"
 
 class AuthService {
   // Флаг для переключения между моком и API
@@ -23,17 +24,33 @@ class AuthService {
     },
   ]
 
+  // Преобразование JWT claims в User объект
+  private claimsToUser(claims: JWTClaims): User {
+    return {
+      id: claims.user_id,
+      login: claims.login,
+      password: "", // Пароль не передается в JWT
+      role: claims.role,
+      cities: claims.cities || [],
+    }
+  }
+
   async login(login: string, password: string): Promise<User | null> {
     if (this.USE_API) {
-      const response = await apiClient.post<{ user: User; token: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
+      const response = await apiClient.post<{ token: string }>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
         login,
         password,
       })
 
-      if (response.success && response.data) {
-        localStorage.setItem("authToken", response.data.token)
-        localStorage.setItem("currentUser", JSON.stringify(response.data.user))
-        return response.data.user
+      if (response.success && response.data?.token) {
+        // Сохраняем JWT в secure cookie
+        JWTManager.setToken(response.data.token)
+
+        // Декодируем токен для получения данных пользователя
+        const claims = JWTManager.decodeToken(response.data.token)
+        if (claims) {
+          return this.claimsToUser(claims)
+        }
       }
       return null
     }
@@ -41,7 +58,9 @@ class AuthService {
     // Мок для разработки
     const user = this.users.find((u) => u.login === login && u.password === password)
     if (user) {
-      localStorage.setItem("currentUser", JSON.stringify(user))
+      // Создаем мок JWT токен для разработки
+      const mockToken = this.createMockJWT(user)
+      JWTManager.setToken(mockToken)
       return user
     }
     return null
@@ -52,17 +71,37 @@ class AuthService {
       await apiClient.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT)
     }
 
-    localStorage.removeItem("currentUser")
-    localStorage.removeItem("authToken")
+    // Удаляем JWT из cookie
+    JWTManager.removeToken()
   }
 
   getCurrentUser(): User | null {
-    const userData = localStorage.getItem("currentUser")
-    return userData ? JSON.parse(userData) : null
+    const claims = JWTManager.getUserFromToken()
+    if (!claims) return null
+
+    return this.claimsToUser(claims)
   }
 
   isAuthenticated(): boolean {
-    return this.getCurrentUser() !== null
+    return JWTManager.isAuthenticated()
+  }
+
+  // Создание мок JWT для разработки
+  private createMockJWT(user: User): string {
+    const header = btoa(JSON.stringify({ alg: "HS256", typ: "JWT" }))
+    const payload = btoa(
+      JSON.stringify({
+        user_id: user.id,
+        login: user.login,
+        role: user.role,
+        cities: user.cities || [],
+        exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 часа
+        iat: Math.floor(Date.now() / 1000),
+      }),
+    )
+    const signature = btoa("mock-signature")
+
+    return `${header}.${payload}.${signature}`
   }
 }
 

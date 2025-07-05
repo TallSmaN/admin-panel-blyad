@@ -12,14 +12,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      router.push("/")
+      router.push("/panel")
     }
   }, [isAuthenticated, isLoading, router])
 
   const handleLogin = async (username: string, password: string): Promise<boolean> => {
     const success = await login(username, password)
     if (success) {
-      router.push("/")
+      router.push("/panel")
       return true
     }
     return false

@@ -3,15 +3,15 @@
 
 export const BACKEND_CONFIG = {
   // 📍 Включить/выключить бэкенд (false = мок данные)
-  USE_BACKEND: false,
+  USE_BACKEND: true,
 
   // 🌐 URL бэкенда
-  API_URL: "http://localhost:3001/api",
+  API_URL: "http://127.0.0.1:2331/api",
 
   // 📋 Эндпоинты (можно менять пути)
   ENDPOINTS: {
-    LOGIN: "/auth/login", // POST: { login, password } → { token }
-    LOGOUT: "/auth/logout", // POST: {} → {}
+    LOGIN: "/login", // POST: { username, password } → { token }
+    LOGOUT: "/logout", // POST: {} → {}
 
     CATEGORIES: "/categories", // GET, POST, PUT, DELETE
     SUBCATEGORIES: "/subcategories", // GET, POST, PUT, DELETE

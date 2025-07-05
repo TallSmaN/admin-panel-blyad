@@ -86,7 +86,7 @@ class SimpleAPI {
   async login(login: string, password: string): Promise<ApiResponse<{ token: string }>> {
     const response = await this.request<{ token: string }>(BACKEND_CONFIG.ENDPOINTS.LOGIN, {
       method: "POST",
-      body: JSON.stringify({ login, password }),
+      body: JSON.stringify({ username: login, password }),
     })
 
     if (response.success) {

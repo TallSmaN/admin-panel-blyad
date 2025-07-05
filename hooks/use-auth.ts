@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { authService } from "@/services/auth-service"
+import { dataService } from "@/services/data-service"
+import { api } from "@/lib/api"
 import type { User } from "@/types"
 
 export function useAuth() {
@@ -9,15 +10,18 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Проверяем JWT при загрузке
-    const currentUser = authService.getCurrentUser()
-    setUser(currentUser)
+    // Проверяем есть ли токен
+    if (api.isAuthenticated()) {
+      // В реальном приложении здесь можно декодировать JWT
+      // Пока ставим заглушку
+      setUser({ id: "1", login: "user", password: "", role: "manager" })
+    }
     setIsLoading(false)
   }, [])
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const loggedInUser = await authService.login(username, password)
+      const loggedInUser = await dataService.login(username, password)
       if (loggedInUser) {
         setUser(loggedInUser)
         return true
@@ -31,7 +35,7 @@ export function useAuth() {
 
   const logout = async (): Promise<void> => {
     try {
-      await authService.logout()
+      await dataService.logout()
       setUser(null)
     } catch (error) {
       console.error("Ошибка выхода:", error)

@@ -3,7 +3,6 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import { ThemeProvider } from "@/components/theme-provider"
 
 export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -20,10 +19,8 @@ export default function HomePage() {
   }, [isAuthenticated, isLoading, router])
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Перенаправление...</div>
-      </div>
-    </ThemeProvider>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-lg">Загрузка...</div>
+    </div>
   )
 }
